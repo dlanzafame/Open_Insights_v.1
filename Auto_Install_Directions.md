@@ -53,7 +53,7 @@ This implementation uses different types of exporters for collecting metrics dat
 - Firewall settings and opening of relevant ports that must be done: Port 9090 for the Graylog Health Module, 9093 for Alert manager, 3000 for the Graylog Support Dashboard and 9100 for Node-exporter.
 
 
-# **installing exporters (To be done on target nodes only)**
+# **Installing Exporters (To be done on target nodes only)**
 
 Note that following exporters must be installed for correct operations on Target nodes.
 
