@@ -189,23 +189,16 @@ Give access info to Graylog Health Module and Graylog Support Dashboard.
 
 Use the following URL to access UI.
 
-http://\&lt;server-IPaddress\&gt;:9090
+http://server-IPaddress:9090
 
-**S ![](RackMultipart20210913-4-vjeeqz_html_391208f2f8fb7246.png)
- tep 5:** Accessing Graylog Support Dashboard Web Interface
+**Step 5:** Accessing Graylog Support Dashboard Web Interface
 
 Use the following Url to access UI.
 
-http://\&lt;server-IPaddress\&gt;:3000
-
-![](RackMultipart20210913-4-vjeeqz_html_b9e9431eb6175e72.png)
+http://server-IPaddress:3000
 
 **Step 6:** Accessing Alertmanager Web Interface
 
 Use the following URL to access UI.
 
-**http://\&lt;server-IPAddress\&gt;:9093**
-
-![](RackMultipart20210913-4-vjeeqz_html_a33b7281484043aa.png)
-
-![](RackMultipart20210913-4-vjeeqz_html_cad24c7539197f26.png)
+**http://server-IPAddress:9093**
