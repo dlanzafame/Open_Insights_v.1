@@ -64,11 +64,11 @@ Downloading exporter package
 
 The exporter package can be download from:
 ####CHANGE THIS LINE TO REFLECT NEW LOCATION
-[//]: # (https://datacloud.altnix.com/exporter.tar.gz)
+
 
 Use following commands:
 ####CHANGE THIS LINE TO REFLECT NEW LOCATION
-[//]: # (_#curl https://datacloud.altnix.com/exporter.tar.gz -o_ _exporter__.tar.gz_ )
+[//]: # (_#curl)
 
 ```bash
 tar xvf exporter.tar.gz -C /opt/
@@ -109,7 +109,7 @@ systemctl restart graylog-server
 
 Graylog Health Module Docker and related images are located at:
 ####CHANGE THIS LINE TO REFLECT NEW LOCATION
-[//]: # ([https://hub.docker.com/repository/docker/altnix/prometheus01](https://hub.docker.com/repository/docker/altnix/prometheus01))
+[//]: # ()
 
 You do not need to login here since the Automation script takes care of the download.
 
@@ -117,7 +117,7 @@ You do not need to login here since the Automation script takes care of the down
 
 Automation script for this project is available for download from:
 ###CHANGE ADDRESS
-[//]: # (https://datacloud.altnix.com/graydocker.tar.gz) 
+[//]: # () 
 
 
 # **Installing the package (to be done on the Graylog Health Module server)**
@@ -128,7 +128,7 @@ These steps must be performed on the Graylog Health Module server where you want
 
 **Step 1** – Copy Graylog Health Module package
 ####CHANGE ADDRESS
-[//]: # (_#curl https://datacloud.altnix.com/graydocker.tar.gz -o graydocker.tar.gz_ )  
+[//]: # (_#curl )  
 ```bash
 tar xvf graydocker.tar.gz -C /opt/
 ```
