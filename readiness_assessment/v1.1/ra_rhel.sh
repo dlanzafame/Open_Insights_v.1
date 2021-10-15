@@ -5,7 +5,7 @@ WARN="0"
 FAIL="0"
 
 # Test if Graylog is Version 4
-GRAYLOG_VERSION=$( yum list installed | grep "^graylog-server.noarch" | grep -c -E -o -e"\W[4]")
+[ -z "${GRAYLOG_VERSION}" ] && GRAYLOG_VERSION=$( yum list installed | grep "^graylog-server.noarch" | grep -c -E -o -e"\W[4]")
 if [ "$GRAYLOG_VERSION" -eq "1" ]; then
         echo "Pass: Graylog is version 4"
         let "PASS++"
@@ -29,7 +29,7 @@ else
 fi
 
 # Check the number of CPU cores
-NCPU=$(lscpu | grep -e"^CPU(s)" | grep -Eo -e"[0-9]+")
+[ -z "${NCPU}" ] && NCPU=$(lscpu | grep -e"^CPU(s)" | grep -Eo -e"[0-9]+")
 if [ "$NCPU" -lt "4" ]; then
         echo "Fail: CPU Count is too low, 4 or more cores are recommended for Enterprise Systems"
         let "FAIL++"
@@ -41,9 +41,21 @@ fi
 SYS_MEM_TOT=$(free --giga | grep -e"^Mem:" | cut -c 18-19)
 SYS_MEM_HALF=$(awk 'BEGIN{print '"$SYS_MEM_TOT"'/2}' | grep -Eo -e"[0-9]+\." | grep -Eo -e"[0-9]+")
 SYS_MEM_QUAR=$(awk 'BEGIN{print '"$SYS_MEM_TOT"'/4}' | grep -Eo -e"[0-9]+\." | grep -Eo -e"[0-9]+")
+SYS_MEM_HALF_HOST="${SYS_MEM_HALF}"
+SYS_MEM_QUAR_HOST="${SYS_MEM_QUAR}"
+if [ ! -z "${SYS_MEM_TOT_ELASTIC}" ] ; then
+	SYS_MEM_HALF_ES=$(awk 'BEGIN{print '"$SYS_MEM_TOT_ELASTIC"'/2}' | grep -Eo -e"[0-9]+\." | grep -Eo -e"[0-9]+")
+	SYS_MEM_QUAR_ES=$(awk 'BEGIN{print '"$SYS_MEM_TOT_ELASTIC"'/4}' | grep -Eo -e"[0-9]+\." | grep -Eo -e"[0-9]+")
+fi
+if [ ! -z "${SYS_MEM_TOT_GRAYLOG}" ] ; then
+	SYS_MEM_HALF_GL=$(awk 'BEGIN{print '"$SYS_MEM_TOT_GRAYLOG"'/2}' | grep -Eo -e"[0-9]+\." | grep -Eo -e"[0-9]+")
+	SYS_MEM_QUAR_GL=$(awk 'BEGIN{print '"$SYS_MEM_TOT_GRAYLOG"'/4}' | grep -Eo -e"[0-9]+\." | grep -Eo -e"[0-9]+")
+fi
+[ ! -z "${SYS_MEM_HALF_ES}" ] && SYS_MEM_HALF="${SYS_MEM_HALF_ES}"
+[ ! -z "${SYS_MEM_QUAR_ES}" ] && SYS_MEM_QUAR="${SYS_MEM_QUAR_ES}"
 
-ES_XMS=$(grep /etc/elasticsearch/jvm.options -e"^-Xms" | grep -Eo -e"[0-9]+")
-ES_XMX=$(grep /etc/elasticsearch/jvm.options -e"^-Xmx" | grep -Eo -e"[0-9]+")
+[ -z "${ES_XMS}" ] && ES_XMS=$(grep /etc/elasticsearch/jvm.options -e"^-Xms" | grep -Eo -e"[0-9]+")
+[ -z "${ES_XMX}" ] && ES_XMX=$(grep /etc/elasticsearch/jvm.options -e"^-Xmx" | grep -Eo -e"[0-9]+")
 if [ "$ES_XMS" -eq "$ES_XMX" ]; then
         if [ "$ES_XMS" -gt "$SYS_MEM_QUAR" ]; then
                 echo "Pass: Elasticseach's minimum and maximum values are equal and greater than the recommended minimum"
@@ -69,9 +81,12 @@ if [ "$ES_XMS" -eq "$SYS_MEM_HALF" ]; then
         let "WARN++"
 fi
 
+SYS_MEM_HALF="${SYS_MEM_HALF_HOST}"
+SYS_MEM_QUAR="${SYS_MEM_QUAR_HOST}"
 
-GL_XMS=$(grep /etc/sysconfig/graylog-server -e"-Xms" | grep -Eo -e"-Xms[0-9]+g" | grep -Eo -e"[0-9]+")
-GL_XMX=$(grep /etc/sysconfig/graylog-server -e"-Xmx" | grep -Eo -e"-Xmx[0-9]+g" | grep -Eo -e"[0-9]+")
+[ -z "${GL_XMS}" ] && GL_XMS=$(grep /etc/sysconfig/graylog-server -e"-Xms" | grep -Eo -e"-Xms[0-9]+g" | grep -Eo -e"[0-9]+")
+[ -z "${GL_XMX}" ] && GL_XMX=$(grep /etc/sysconfig/graylog-server -e"-Xmx" | grep -Eo -e"-Xmx[0-9]+g" | grep -Eo -e"[0-9]+")
+[ ! -z "${SYS_MEM_QUAR_GL}" ] && SYS_MEM_QUAR="${SYS_MEM_QUAR_GL}"
 if [ "$GL_XMS" -eq "$GL_XMX" ]; then
         if [ "$GL_XMS" -gt "$SYS_MEM_QUAR" ]; then
                 echo "Pass: Graylog's minimum and maximum values are equal and greater than the recommended minimum"
@@ -119,7 +134,7 @@ else
         let "PASS++"
 fi
 
-GLJOURNAL_ENABLED=$(grep /etc/graylog/server/server.conf -e"^message_journal_enabled" | grep -o -i -e"true" -e"false" | grep -Eo -e"\w+")
+[ -z "${GLJOURNAL_ENABLED}" ] && GLJOURNAL_ENABLED=$(grep /etc/graylog/server/server.conf -e"^message_journal_enabled" | grep -o -i -e"true" -e"false" | grep -Eo -e"\w+")
 if [ "$GLJOURNAL_ENABLED" == "true" ]; then
         echo "Pass: Graylog's Journal is enabled"
         let "PASS++"
@@ -128,7 +143,7 @@ else
         let "FAIL++"
 fi
 
-ES_LOGGING=$(grep /etc/elasticsearch/log4j2.properties -e"rootLogger.level" | grep -Eo -e"=\W?\w+" | grep -c -e"info")
+[ -z "${ES_LOGGING}" ] && ES_LOGGING=$(grep /etc/elasticsearch/log4j2.properties -e"rootLogger.level" | grep -Eo -e"=\W?\w+" | grep -c -e"info")
 if [ "$ES_LOGGING" -eq "1" ]; then
         echo "Pass: Elasticsearch's logging configuration is set to the recommended default"
         let "PASS++"
