@@ -1,0 +1,231 @@
+#!/bin/bash
+
+######### Thread count  ####################
+trdcount=`grep -s '^Threads' /proc/[0-9]*/status | awk '{ sum += $2; } END { print "threads.value", sum;}'|tr -d -c 0-9`
+echo  "Thread_count{count=\"$trdcount\"} $trdcount"  > localPWD/code/nodetext/elasticollector.prom
+
+################# Elastic_colloctor ##########
+# Elasticsearch Cluster name 
+cluster_name=`grep -v -e"^$"  -e"^#" /etc/elasticsearch/elasticsearch.yml |grep cluster.name | awk '{print }'`
+if [[ $cluster_name == 'cluster.name: graylog' ]] 
+then 
+printf '%s\n' "Elasticsearch_cluster_name_is_graylog{Conf=\"$cluster_name\"} 0"  > localPWD/code/nodetext/elasticollector.prom
+else
+printf '%s\n' "Elasticsearch_cluster_name_is_not_graylog{Conf=\"$cluster_name\"} 1"  > localPWD/code/nodetext/elasticollector.prom
+fi
+
+########## Elasticsearch Djava_io_tmpdir path #####################
+
+Djava_io_tmpdir=`grep -v -e"^$"  -e"^#" /etc/elasticsearch/jvm.options |grep Djava.io.tmpdir | awk '{print }'` 
+if [[ $Djava_io_tmpdir == '-Djava.io.tmpdir=${ES_TMPDIR}' ]] 
+then 
+printf '%s\n' "Elasticsearch_Djava_io_tmpdir_is_default{Conf=\"$Djava_io_tmpdir\"} 0"  >> localPWD/code/nodetext/elasticollector.prom
+else
+printf '%s\n' "Elasticsearch_Djava_io_tmpdir_is_changed{Conf=\"$Djava_io_tmpdir\"} 1"  >> localPWD/code/nodetext/elasticollector.prom
+fi
+
+########## Elasticsearch Node name ###################
+
+node_name=`grep -v -e"^$"  /etc/elasticsearch/elasticsearch.yml |grep node.name | awk '{print }'` 
+
+if [[ $node_name == '#node.name: node-1' ]] 
+then 
+printf '%s\n' "Elasticsearch_node_name_is_default{Conf=\"$node_name\"} 0"  >> localPWD/code/nodetext/elasticollector.prom
+else
+printf '%s\n' "Elasticsearch_node_name_is_changed{Conf=\"$node_name\"} 1"  >> localPWD/code/nodetext/elasticollector.prom
+fi
+
+########## Elasticsearch JVM Xms ####################
+
+elasticjvmxms=`grep  -v -e "^#"  -e"^$"  /etc/elasticsearch/jvm.options |grep Xms |tail -1 | awk '{print }'`
+
+if [[ $elasticjvmxms == '## -Xms4g' ]] 
+then 
+printf '%s\n' "Elasticsearch_jvm_xms_is_default{Value=\"$elasticjvmxms\"} 0"  >> localPWD/code/nodetext/elasticollector.prom
+else
+printf '%s\n' "Elasticsearch_jvm_xms_is_Changed{Value=\"$elasticjvmxms\"} 1"  >> localPWD/code/nodetext/elasticollector.prom
+fi
+
+########### Elasticsearch JVM Xmx #######################
+
+elasticjvmxmx=`grep  -v -e "^#"  -e"^$"  /etc/elasticsearch/jvm.options |grep Xmx |tail -1 | awk '{print }'`
+
+if [[ $elasticjvmxmx == '## -Xmx4g' ]] 
+then 
+printf '%s\n' "Elasticsearch_jvm_xmx_is_default{Value=\"$elasticjvmxmx\"} 0"  >> localPWD/code/nodetext/elasticollector.prom
+else
+printf '%s\n' "Elasticsearch_jvm_xmx_is_Changed{Value=\"$elasticjvmxmx\"} 1"  >> localPWD/code/nodetext/elasticollector.prom
+fi
+
+########### Elasticsearch all config ###########################
+
+elasticonf=`grep -v -e"^$" -e"^#"  /etc/elasticsearch/elasticsearch.yml | tr '\n' ';'`
+
+printf '%s\n' "Elasticsearch_conf_all_in_elasticsearch{config=\"$elasticonf\"} 0" >> localPWD/code/nodetext/elasticollector.prom
+
+########### Elasticsearch all JVM options ###########################
+
+
+elasticjvm=`grep -v -e"^$" -e"^#"   /etc/elasticsearch/jvm.options | tr '\n' ';'`
+printf '%s\n' "Elastic_JVM_conf_all{config=\"$elasticjvm\"} 0" >> localPWD/code/nodetext/elasticollector.prom
+
+################# MongoDB_colloctor ##############
+# MongoDB all config 
+
+mongoconf=`grep -v -e"^$" -e"^#"  /etc/mongod.conf | tr '\n' ';'`
+printf '%s\n' "MongoDB_Server_conf_all{config=\"$mongoconf\"} 0" >> localPWD/code/nodetext/elasticollector.prom
+
+################# gray_colloctor ##########
+# Graylog node_id_file 
+
+node_id_file=`grep -v -e"^$" -e"^#"  /etc/graylog/server/server.conf |grep node_id_file | awk '{print $3}'` 
+if [ $node_id_file = "/etc/graylog/server/node-id" ] 
+then 
+printf '%s\n'  "Graylog_node_id_file_in_default_path{Path=\"$node_id_file\"} 0"  > localPWD/code/nodetext/graycollector.prom
+else
+printf '%s\n' "Graylog_node_id_file_path_changed{Path=\"$node_id_file\"} 1"  > localPWD/code/nodetext/graycollector.prom
+fi
+
+######## Graylog http_enable_cors ##########
+
+http_enable_cors=`grep -v -e"^$" /etc/graylog/server/server.conf |grep http_enable_cors | awk '{print }'` 
+if [[ $http_enable_cors == 'http_enable_cors = false' ]] 
+then 
+printf '%s\n' "Graylog_http_enable_cors_UnCommented{conf=\"$http_enable_cors\"} 0"  >> localPWD/code/nodetext/graycollector.prom
+else
+printf '%s\n' "Graylog_http_enable_cors_Commented{conf=\"$http_enable_cors\"} 0"  >> localPWD/code/nodetext/graycollector.prom
+fi
+
+######### Graylog http_enable_gzip ############
+
+http_enable_gzip=`grep -v -e"^$" /etc/graylog/server/server.conf |grep http_enable_gzip | awk '{print }'` 
+if [[ $http_enable_gzip == 'http_enable_gzip = false' ]] 
+then 
+printf '%s\n' "Graylog_http_enable_gzip_UnCommented{conf=\"$http_enable_gzip\"} 0"  >> localPWD/code/nodetext/graycollector.prom
+else
+printf '%s\n' "Graylog_http_enable_gzip_Commented{conf=\"$http_enable_gzip\"} 0"  >> localPWD/code/nodetext/graycollector.prom
+fi
+
+######### Graylog all elasticsearch conf ###############
+
+elasticsearch=`grep -v -e"^$" -e"^#"  /etc/graylog/server/server.conf |grep elasticsearch_ | tr '\n' ';'`
+printf '%s\n' "elasticsearch_all_in_graylog{config=\"$elasticsearch\"} 0" >> localPWD/code/nodetext/graycollector.prom
+
+######### Graylog message_journal_dir ############
+
+message_journal_dir=`grep -v -e"^$" -e"^#"  /etc/graylog/server/server.conf |grep message_journal_dir | awk '{print $3}'` 
+if [ $message_journal_dir = "/var/lib/graylog-server/journal" ] 
+then 
+printf '%s\n' "Graylog_message_journal_dir_in_default_path{Path=\"$message_journal_dir\"} 0"  >> localPWD/code/nodetext/graycollector.prom
+else
+printf '%s\n' "Graylog_message_journal_dir_path_changed{Path=\"$message_journal_dir\"} 1"  >> localPWD/code/nodetext/graycollector.prom
+fi
+
+######## Graylog output_batch_size ###################
+
+output_batch_size=`grep -v -e"^$" -e"^#" /etc/graylog/server/server.conf |grep output_batch_size | awk '{print }'` 
+if [[ $output_batch_size == 'output_batch_size = 500' ]] 
+then 
+printf '%s\n' "Graylog_output_batch_size_is_default{Size=\"$output_batch_size\"} 0"  >> localPWD/code/nodetext/graycollector.prom
+else
+printf '%s\n' "Graylog_output_batch_size_is_changed{Size=\"$output_batch_size\"} 1"  >> localPWD/code/nodetext/graycollector.prom
+fi
+
+######## Graylog udp_recvbuffer_sizes ###################
+
+udp_recvbuffer_sizes=`grep -v -e"^$"  /etc/graylog/server/server.conf |grep udp_recvbuffer_sizes | awk '{print }'` 
+if [[ $udp_recvbuffer_sizes == 'udp_recvbuffer_sizes = 1048576' ]] 
+then 
+printf '%s\n' "Graylog_udp_recvbuffer_sizes_is_changed{Size=\"$udp_recvbuffer_sizes\"} 1"  >> localPWD/code/nodetext/graycollector.prom
+else
+printf '%s\n' "Graylog_udp_recvbuffer_sizes_is_default{Size=\"$udp_recvbuffer_sizes\"} 0"  >> localPWD/code/nodetext/graycollector.prom
+fi
+
+########## Graylog tcp_recvbuffer_sizes #################
+
+tcp_recvbuffer_sizes=`grep -v -e"^$"  /etc/graylog/server/server.conf |grep tcp_recvbuffer_sizes | awk '{print }'`
+if [ -z "$tcp_recvbuffer_sizes" ]
+then
+printf '%s\n' "Graylog_tcp_recvbuffer_size_not_configured{Size=\"$tcp_recvbuffer_sizes\"} 0"  >> localPWD/code/nodetext/graycollector.prom
+else
+printf '%s\n' "Graylog_tcp_recvbuffer_size_is_configured{Size=\"$tcp_recvbuffer_sizes\"} 1"  >> localPWD/code/nodetext/graycollector.prom
+fi
+
+########### Graylog message_journal_max_size #####################
+
+mjournal_max_size=`grep -v -e"^$"  /etc/graylog/server/server.conf |grep message_journal_max_size | awk '{print }'` 
+
+if [[ $mjournal_max_size == '#message_journal_max_size = 5gb' ]] 
+then 
+printf '%s\n' "Graylog_message_journal_max_size_is_default{size=\"$mjournal_max_size\"} 0" >> localPWD/code/nodetext/graycollector.prom
+else
+printf '%s\n' "Graylog_message_journal_max_size_is_changed{size=\"$mjournal_max_size\"} 0" >> localPWD/code/nodetext/graycollector.prom
+fi
+
+########### Graylog server all conf ######################
+
+grayserver=`grep -v -e"^$" -e"^#"  /etc/graylog/server/server.conf | tr '\n' ';'`
+printf '%s\n' "GraylogServer_conf_all{config=\"$grayserver\"} 0" >> localPWD/code/nodetext/graycollector.prom
+
+########## Elastic cluster status ########################
+
+str=`curl -s 172.16.6.171:9200/_cluster/health?pretty |jq '.status'` 
+modified="${str:1:-1}"
+
+if [[ $modified == green ]] 
+then 
+printf  '%s\n' "Elastic_cluster_health{status=\"$modified\"} 0" >> localPWD/code/nodetext/graycollector.prom
+
+elif [[ $modified == yellow ]]
+then
+printf '%s\n' "Elastic_cluster_health{status=\"$modified\"} 0" >> localPWD/code/nodetext/graycollector.prom
+
+elif [[ $modified == red ]]
+then
+printf '%s\n' "Elastic_cluster_health{status=\"$modified\"} 0" >> localPWD/code/nodetext/graycollector.prom
+fi
+
+####### HugePage status ########################
+
+var=$(cat /sys/kernel/mm/transparent_hugepage/enabled |awk '{ print $1 }' |cut -c 1-7)
+if [ $var == always ]; then
+echo "HugePageEnabled 1" >> localPWD/code/nodetext/graycollector.prom
+else
+echo "HugePageEnabled 0" >> localPWD/code/nodetext/graycollector.prom
+fi
+
+##### check SeStatus ########
+
+os1="Ubuntu"
+os2="Debian"
+if [ -f /etc/oracle-release ]; then
+os=$(cat /etc/oracle-release | awk '{print $1}')
+echo $os
+var=$(getenforce)
+if [ $var == Disabled ]; then
+echo "SELinux_disabled 0" >> localPWD/code/nodetext/graycollector.prom
+else
+echo "SELinux_enabled 1" >> localPWD/code/nodetext/graycollector.prom
+fi
+else
+os=$(cat /etc/os-release | grep -w 'NAME' | awk -F'="' '{print $2}'| cut -b 1-7)
+if [ "$os1" = "$os" ] || [ "$os2" = "$os" ]; then
+echo $os
+exit 0
+else
+var=$(getenforce)
+if [ $var == Disabled ]; then
+echo "SELinux_disabled 0" >> localPWD/code/nodetext/graycollector.prom
+else
+echo "SELinux_enabled 1" >> localPWD/code/nodetext/graycollector.prom
+fi
+fi
+fi
+
+####################
+
+
+
+
+
+
